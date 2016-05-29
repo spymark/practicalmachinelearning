@@ -148,17 +148,20 @@ testing &lt;- testing%&gt;%select(-(kurtosis_roll_belt:var_yaw_belt), -(var_acce
 <div id="model-building-and-prediction-results" class="section level1">
 <h1>Model building and prediction results</h1>
 <p>The first attempt in predicting the classe was with rpart.</p>
-<pre class="r"><code>modFit &lt;- train(classe ~., method=&quot;rpart&quot;, data = training)</code></pre>
-<pre><code>## Loading required package: rpart</code></pre>
+<pre class="r"><code>modFit1 &lt;- train(classe ~., method=&quot;rpart&quot;, data = training)</code></pre>
 <p>This didn’t turn out to be particularly successfull. We get 8/20 right</p>
-<pre class="r"><code>predict(modFit,newdata = testing)</code></pre>
+<pre class="r"><code>pred1 &lt;- predict(modFit1,newdata = testing)</code></pre>
+<pre><code>## Loading required package: rpart</code></pre>
+<pre class="r"><code>pred1</code></pre>
 <pre><code>##  [1] B A C A C C C C A A C C C A C C C B B C
 ## Levels: A B C D E</code></pre>
 <p>The other method uses was PLS</p>
 <pre class="r"><code>ctrl &lt;- trainControl(method= &quot;repeatedcv&quot;, repeats = 3, classProbs = TRUE)
 
-modFit &lt;- train(classe ~ ., data = training, method = &quot;pls&quot;,  tuneLength = 15, trControl = ctrl,  
+modFit2 &lt;- train(classe ~ ., data = training, method = &quot;pls&quot;,  tuneLength = 15, trControl = ctrl,  
                 preProc = c(&quot;center&quot;, &quot;scale&quot;))</code></pre>
+<p>The results were very good. We get 18/20 predictions right</p>
+<pre class="r"><code>pred2 &lt;- predict(modFit2,newdata = testing)</code></pre>
 <pre><code>## Loading required package: pls</code></pre>
 <pre><code>## Warning: package 'pls' was built under R version 3.2.5</code></pre>
 <pre><code>## 
@@ -169,13 +172,13 @@ modFit &lt;- train(classe ~ ., data = training, method = &quot;pls&quot;,  tuneL
 <pre><code>## The following object is masked from 'package:stats':
 ## 
 ##     loadings</code></pre>
-<p>The results were very good. We get 18/20 predictions right</p>
-<pre class="r"><code>predict(modFit,newdata = testing)</code></pre>
+<pre class="r"><code>pred2</code></pre>
 <pre><code>##  [1] B C C A A E D B A A B C B A E E A B B B
 ## Levels: A B C D E</code></pre>
 </div>
 <div id="conclusion" class="section level1">
 <h1>Conclusion</h1>
+<p>With rpart we observed 8/20 correct predictions in the test set. With pls we observed 18/20 correct predictions. Scaling and centering the datapoints must have helped as well.</p>
 </div>
 
 
