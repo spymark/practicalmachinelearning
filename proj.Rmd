@@ -1,0 +1,85 @@
+---
+title: "Practical Machine Learning Project"
+author: "Spyros Marketos"
+date: "29 May 2016"
+output: html_document
+---
+
+#Synopsis
+
+
+Github repository: https://github.com/spymark/practicalmachinelearning 
+
+
+#Setup
+We are loading the libraries needed, skipping the version warning messages.
+```{r,echo=TRUE, message=FALSE}
+suppressWarnings(suppressMessages(library(AppliedPredictiveModeling)))
+suppressWarnings(suppressMessages(library(caret)))
+suppressWarnings(suppressMessages(library(dplyr)))
+
+```
+
+Setting working directory and loading in the training data.
+```{r, echo= TRUE}
+setwd('D:\\Coursera\\Practical Machine Learning\\project')
+training <- read.csv("pml-training.csv", header = TRUE)
+```
+
+#Variable Selection
+After inspection of the training data, several fields were deemed to have little to no explanatory power. These fields are excluded from the data set that will be used for the model building. Apart from that fact, including the entire set of fields was leading to severely increased processing time with unnoticeable difference in prediction improvement. Therefore, these fields are dropped. 
+
+```{r, echo = TRUE}
+training <- training%>%select(-(kurtosis_roll_belt:var_yaw_belt), -(var_accel_arm:var_yaw_arm), -(kurtosis_roll_arm:amplitude_yaw_arm), 
+                              -(kurtosis_roll_dumbbell:amplitude_pitch_dumbbell), - (var_accel_dumbbell:var_yaw_dumbbell),
+                              -kurtosis_roll_forearm,- amplitude_yaw_dumbbell, -(kurtosis_picth_forearm:amplitude_pitch_forearm),
+                              -(var_accel_forearm:var_yaw_forearm), -X, - user_name, -amplitude_yaw_forearm)
+```
+
+We need to remove the exact same fields from the testing set, before we could use it to evaluate the model built on the imputed training set.
+
+```{r, echo= TRUE}
+testing <-  read.csv("pml-testing.csv", header = TRUE)
+
+testing <- testing%>%select(-(kurtosis_roll_belt:var_yaw_belt), -(var_accel_arm:var_yaw_arm), -(kurtosis_roll_arm:amplitude_yaw_arm), 
+                            -(kurtosis_roll_dumbbell:amplitude_pitch_dumbbell), - (var_accel_dumbbell:var_yaw_dumbbell),
+                            -kurtosis_roll_forearm,- amplitude_yaw_dumbbell, -(kurtosis_picth_forearm:amplitude_pitch_forearm),
+                            -(var_accel_forearm:var_yaw_forearm), -X, - user_name, -amplitude_yaw_forearm)
+
+```
+
+#Model building and prediction results
+The first attempt in predicting the classe was with rpart.
+```{r, echo=TRUE, cache=TRUE}
+modFit1 <- train(classe ~., method="rpart", data = training)
+```
+
+This didn't turn out to be particularly successfull. We get 8/20 right
+```{r, echo=TRUE}
+pred1 <- predict(modFit1,newdata = testing)
+pred1
+```
+
+The other method uses was PLS
+
+```{r, echo = TRUE, cache=TRUE}
+ctrl <- trainControl(method= "repeatedcv", repeats = 3, classProbs = TRUE)
+
+modFit2 <- train(classe ~ ., data = training, method = "pls",  tuneLength = 15, trControl = ctrl,  
+                preProc = c("center", "scale"))
+```
+
+The results were very good. We get 18/20 predictions right
+```{r, echo=TRUE}
+pred2 <- predict(modFit2,newdata = testing)
+pred2
+```
+
+
+#Conclusion
+
+confusionMconfusionMatrix(pred1, testing)
+confusionMconfusionMatrix(pred2, testing)
+
+
+
